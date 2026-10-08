@@ -96,6 +96,12 @@ logs/
 # Local monorepo dev helpers (not for upstream)
 scripts/dev-local-link.sh
 
+# Local dev data directory (OCTOP_HOME pointed at this checkout)
+.octop-dev/
+
+# Local git hooks copy (upstream .githooks/ stays untouched)
+.githooks-local/
+
 # Local downloaded platform-tools for mobile DinD testing
 .tools/
 .tools-sdk/
