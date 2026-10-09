@@ -39,13 +39,32 @@
     <script id="octop-boot-theme">
       (function () {
         var KEY = "theme";
+        var LEGACY_PALETTE_KEY = "octop:ui-palette";
+        // Keep in sync with src/styles/themePalettes.ts
+        // (VALID_PALETTES + "custom" / DEFAULT_PALETTE).
+        var PALETTES = [
+          "rose",
+          "tech",
+          "indigo",
+          "teal",
+          "violet",
+          "emerald",
+          "amber",
+          "slate",
+          "custom",
+        ];
+        var DEFAULT_PALETTE = "tech";
         var mode = "light";
+        var palette = null;
         function systemDark() {
           try {
             return window.matchMedia("(prefers-color-scheme: dark)").matches;
           } catch (e) {
             return false;
           }
+        }
+        function isPalette(value) {
+          return typeof value === "string" && PALETTES.indexOf(value) !== -1;
         }
         try {
           var raw = localStorage.getItem(KEY);
@@ -62,6 +81,9 @@
             ) {
               pref = parsed.preference;
             }
+            if (parsed && isPalette(parsed.palette)) {
+              palette = parsed.palette;
+            }
           }
           if (pref === "dark" || (pref === "system" && systemDark())) {
             mode = "dark";
@@ -69,7 +91,20 @@
         } catch (e) {
           if (systemDark()) mode = "dark";
         }
+        // Mirrors readStoredAppearance(): JSON palette → legacy key → default.
+        // Setting this pre-paint stops the brand colour from flashing the
+        // :root fallback before React mounts.
+        if (!palette) {
+          var legacy = null;
+          try {
+            legacy = localStorage.getItem(LEGACY_PALETTE_KEY);
+          } catch (e) {
+            legacy = null;
+          }
+          palette = isPalette(legacy) ? legacy : DEFAULT_PALETTE;
+        }
         document.documentElement.setAttribute("data-theme", mode);
+        document.documentElement.setAttribute("data-palette", palette);
         var themeColor = mode === "dark" ? "#1a1c28" : "#ffffff";
         var metas = document.querySelectorAll('meta[name="theme-color"]');
         for (var i = 0; i < metas.length; i++) {
@@ -128,18 +163,21 @@
         height: 88px;
         flex: none;
       }
+      /* Tracks the brand palette through --fn-color-brand once theme-vars.css
+         has loaded; the tech (#3A5FE0) fallbacks cover the pre-CSS first paint.
+         Dark mode uses the lighter text variant, matching the rose original. */
       #octop-boot-ring {
         box-sizing: border-box;
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        border: 3px solid rgba(232, 93, 117, 0.18);
-        border-top-color: #e85d75;
+        border: 3px solid rgba(58, 95, 224, 0.18);
+        border-top-color: var(--fn-color-brand, #3a5fe0);
         animation: octop-boot-spin 0.85s linear infinite;
       }
       html[data-theme="dark"] #octop-boot-ring {
-        border-color: rgba(240, 139, 154, 0.22);
-        border-top-color: #f08b9a;
+        border-color: rgba(123, 155, 252, 0.22);
+        border-top-color: var(--fn-text-brand, #7b9bfc);
       }
       .octop-boot-logo {
         position: absolute;
