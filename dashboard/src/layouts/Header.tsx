@@ -2,7 +2,7 @@ import { Layout } from "antd";
 import { Menu as MenuIcon } from "lucide-react";
 import PwaInstallPrompt from "../components/PwaInstallPrompt";
 import AppVersionBadge from "../components/AppVersionBadge";
-import CurrentVersionBadge from "../components/CurrentVersionBadge";
+// import CurrentVersionBadge from "../components/CurrentVersionBadge";
 import { useTheme } from "../context/ThemeContext";
 import { typeSize } from "../utils/mobileTypeScale";
 
@@ -98,7 +98,7 @@ export default function Header({ onToggle, isMobile }: HeaderProps) {
             flexShrink: 1,
           }}
         >
-          <CurrentVersionBadge isMobile />
+          {/* <CurrentVersionBadge isMobile /> */}
           <AppVersionBadge isMobile />
         </div>
       </div>

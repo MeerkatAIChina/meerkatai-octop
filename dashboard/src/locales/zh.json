@@ -1,6 +1,6 @@
 {
   "app": {
-    "pageTitle": "Octop - 懂你、帮你、陪你成长的智能伙伴"
+    "pageTitle": "MAPID 助力消费品行业 AI 产业落地"
   },
   "layout": {
     "collapsePanel": "收起面板",
@@ -3652,7 +3652,7 @@
     "viewEpisodes": "去看情绪日记 →"
   },
   "chatWelcome": {
-    "greeting": "嗨！你专属的智能伙伴来啦～",
+    "greeting": "Hi~ 来和智能搭档一起探索吧!",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "团队",
     "mascotSwitchHint": "点一下换个表情～",
