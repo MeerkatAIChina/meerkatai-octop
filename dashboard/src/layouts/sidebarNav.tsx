@@ -21,6 +21,7 @@ import {
   PanelsTopLeft,
 } from "lucide-react";
 import type { OctopUser } from "../api/modules/auth";
+import { HIDDEN_NAV_KEYS } from "../config/hiddenFeatures";
 import { navAllowed, userCan } from "../utils/permissions";
 
 export const EXPANDED_WIDTH = 220;
@@ -312,5 +313,15 @@ export function buildNavSections(
   if (adminItems.length > 0) {
     sections.push({ id: "admin", groupKey: "nav.admin", items: adminItems });
   }
-  return sections;
+  // Single choke point: this catalog feeds both the sidebar and the nav
+  // customizer (see Sidebar.tsx), so filtering here hides the items in both.
+  // Empty groups are dropped too — "control" holds nothing but hidden keys,
+  // and sectionsFromLayout() would otherwise render a bare group heading for
+  // users who never customized their nav.
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !HIDDEN_NAV_KEYS.has(item.key)),
+    }))
+    .filter((section) => section.items.length > 0);
 }

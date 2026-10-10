@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { OctopUser } from "../api/modules/auth";
+import { HIDDEN_NAV_KEYS } from "../config/hiddenFeatures";
 import { buildNavSections } from "./sidebarNav";
 import {
   createGroup,
@@ -7,6 +8,7 @@ import {
   editorFromCatalog,
   layoutFromEditor,
   placeItem,
+  preservedPlacements,
   sectionsFromLayout,
   visibleEditorGroups,
 } from "./sidebarNavLayout";
@@ -40,9 +42,9 @@ describe("sidebarNavLayout", () => {
       "tasks",
       "token-usage",
     ]);
+    // "control" is gone: every item it held is hidden (see hiddenFeatures.ts).
     expect(editor.groups.map((group) => group.id)).toEqual([
       "settings",
-      "control",
       "admin",
     ]);
     expect(editor.hidden).toEqual([]);
@@ -60,7 +62,9 @@ describe("sidebarNavLayout", () => {
         { key: "chat" },
         { key: "personalization", group: "settings" },
         { key: "token-usage", hidden: true },
-        { key: "workbench", group: "control" },
+        // Stands in for "any item a user parked in a built-in group" — the
+        // keys that used to live here are hidden now.
+        { key: "connectors", group: "control" },
       ],
     });
     expect(applied.map((section) => section.id ?? "front")).toEqual([
@@ -94,10 +98,54 @@ describe("sidebarNavLayout", () => {
     ).toBe(false);
   });
 
+  it("keeps hidden nav items out of the editor and the sidebar", () => {
+    const sections = catalog();
+    const saved = {
+      groups: [{ id: "settings" }, { id: "control" }],
+      items: [
+        { key: "chat" },
+        { key: "bridge" },
+        { key: "workbench", group: "control" },
+        { key: "connectors", group: "control" },
+      ],
+    };
+
+    // Covers all three customizer zones: ungrouped, per-group, and the
+    // "hidden items" list.
+    const editor = editorFromCatalog(sections, saved);
+    const shown = [
+      ...editor.ungrouped,
+      ...Object.values(editor.itemsByGroup).flat(),
+      ...editor.hidden,
+    ];
+    for (const key of HIDDEN_NAV_KEYS) {
+      expect(shown).not.toContain(key);
+    }
+    expect(shown).toContain("connectors");
+
+    const rendered = sectionsFromLayout(sections, saved).flatMap((section) =>
+      section.items.map((item) => item.key),
+    );
+    for (const key of HIDDEN_NAV_KEYS) {
+      expect(rendered).not.toContain(key);
+    }
+
+    // A hidden key already sitting in the stored layout survives a save
+    // round-trip, so un-hiding restores the user's placement instead of
+    // silently dropping it.
+    const preserved = preservedPlacements(saved, sections);
+    expect(preserved.map((item) => item.key)).toEqual(["bridge", "workbench"]);
+    const roundTripped = layoutFromEditor(editor, preserved).items.map(
+      (item) => item.key,
+    );
+    expect(roundTripped).toContain("bridge");
+    expect(roundTripped).toContain("workbench");
+  });
+
   it("moves a deleted group's items to the front of the ungrouped list", () => {
     const editor = editorFromCatalog(catalog(), null);
     const next = deleteGroup(editor, "settings");
-    expect(next.groups.map((group) => group.id)).toEqual(["control", "admin"]);
+    expect(next.groups.map((group) => group.id)).toEqual(["admin"]);
     expect(next.ungrouped.slice(0, 2)).toEqual(["personalization", "channels"]);
     expect(next.ungrouped).toContain("chat");
   });
