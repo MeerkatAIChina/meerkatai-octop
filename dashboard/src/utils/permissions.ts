@@ -1,5 +1,7 @@
 /** Client-side helpers mirroring backend ``user_has_permission``. */
 
+import { isHiddenRoute } from "../config/hiddenFeatures";
+
 export type PermissionHolder = {
   role: "admin" | "user" | string;
   permissions?: string[] | null;
@@ -222,6 +224,10 @@ export function pathPermissionKeys(pathname: string): PermissionKeys | null {
 /** True when this route config path should be wrapped in RequirePermission. */
 export function routeNeedsPermission(routePath: string): boolean {
   const probe = routePath.replace(/\/\*$/, "").replace(/\/:[^/]+/g, "");
+  // Hidden routes need the wrapper even when they carry no permission key:
+  // /bridge returns null from pathPermissionKeys, so without this it would
+  // never be wrapped and canAccessPath() would never be consulted.
+  if (isHiddenRoute(probe)) return true;
   if (pathPermissionKeys(probe) !== null) return true;
   if (probe === "/personalization" || probe.startsWith("/personalization/")) {
     return true;
@@ -235,6 +241,9 @@ export function canAccessPath(
   user: PermissionHolder | null | undefined,
   pathname: string,
 ): boolean {
+  // Hidden features outrank permissions, so this must come before the keys
+  // check — that is what blocks admins too.
+  if (isHiddenRoute(pathname)) return false;
   const req = pathPermissionKeys(pathname);
   if (req === null) return true;
   return canAccessKeys(user, req);
