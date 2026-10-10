@@ -14,6 +14,7 @@ import { OAUTH_APP_PROVIDERS, type OauthAppKind } from "./oauthProviders";
 import ForbiddenPage from "../../../components/ForbiddenPage";
 import { useGatedSearchTabs } from "../../../hooks/useGatedSearchTabs";
 import { USERS_TAB_PERMISSIONS } from "../../../utils/permissions";
+import { HIDDEN_TAB_KEYS } from "../../../config/hiddenFeatures";
 import feishuIcon from "../../../assets/channels/feishu.svg";
 import wecomIcon from "../../../assets/channels/wecom.svg";
 import dingtalkIcon from "../../../assets/channels/dingtalk.svg";
@@ -38,7 +39,7 @@ function BrandTabIcon({
   return <img src={src} alt="" width={size} height={size} draggable={false} />;
 }
 
-const TABS: TabBarItem<TabKey>[] = [
+const ALL_TABS: TabBarItem<TabKey>[] = [
   { key: "local", labelKey: "adminUsers.tabLocal", icon: Users },
   { key: "roles", labelKey: "adminUsers.tabRoles", icon: IdCard },
   {
@@ -67,6 +68,12 @@ const TABS: TabBarItem<TabKey>[] = [
     icon: Network,
   },
 ];
+
+/**
+ * Keys are dropped by the central switch in
+ * `config/hiddenFeatures.ts`; remove one there to bring the tab back.
+ */
+export const TABS = ALL_TABS.filter((tab) => !HIDDEN_TAB_KEYS.has(tab.key));
 
 function parseTab(raw: string | null): TabKey {
   if (raw === "roles") return "roles";
