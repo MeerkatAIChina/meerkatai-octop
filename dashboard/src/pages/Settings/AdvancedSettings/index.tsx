@@ -19,6 +19,7 @@ import TabBar, { type TabBarItem } from "../../../components/TabLabel/TabBar";
 import tabStyles from "./tabContent.module.less";
 import ForbiddenPage from "../../../components/ForbiddenPage";
 import { useGatedSearchTabs } from "../../../hooks/useGatedSearchTabs";
+import { HIDDEN_TAB_KEYS } from "../../../config/hiddenFeatures";
 import { ADVANCED_TAB_PERMISSIONS } from "../../../utils/permissions";
 
 type TabKey =
@@ -29,7 +30,7 @@ type TabKey =
   | "updates"
   | "captcha";
 
-const TABS: TabBarItem<TabKey>[] = [
+const ALL_TABS: TabBarItem<TabKey>[] = [
   { key: "env-vars", labelKey: "nav.environments", icon: Variable },
   { key: "observability", labelKey: "nav.observability", icon: Activity },
   { key: "backup", labelKey: "nav.backupRestore", icon: Archive },
@@ -37,6 +38,14 @@ const TABS: TabBarItem<TabKey>[] = [
   { key: "captcha", labelKey: "nav.loginCaptcha", icon: ShieldCheck },
   { key: "updates", labelKey: "nav.checkUpdates", icon: RefreshCw },
 ];
+
+/**
+ * Filtered here, at the source, rather than inside the shared
+ * `useGatedSearchTabs` hook — that hook is generic and must not know which
+ * tabs exist. Keys are dropped by the central switch in
+ * `config/hiddenFeatures.ts`; remove one there to bring the tab back.
+ */
+export const TABS = ALL_TABS.filter((tab) => !HIDDEN_TAB_KEYS.has(tab.key));
 
 function parseTab(raw: string | null): TabKey {
   if (
