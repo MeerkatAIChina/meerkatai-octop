@@ -45,6 +45,7 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import PaletteSwitcher from "./PaletteSwitcher";
 import type { OctopUser } from "../api/modules/auth";
 import { useLayoutMode } from "../context/LayoutModeContext";
+import { HIDDEN_ACCOUNT_MENU } from "../config/hiddenFeatures";
 import type { LayoutMode } from "../layouts/layoutModeStorage";
 import { userCan } from "../utils/permissions";
 import feishuIcon from "../assets/channels/feishu.svg";
@@ -369,27 +370,31 @@ export default function AvatarDropdown({
         <ThemeSwitcher compact />
       </div>
 
-      <a
-        className={styles.menuItem}
-        href={HELP_FEEDBACK_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => setMenuOpen(false)}
-      >
-        <CircleHelp size={16} strokeWidth={1.8} />
-        <span>{t("account.helpFeedback")}</span>
-      </a>
+      {!HIDDEN_ACCOUNT_MENU.has("helpFeedback") && (
+        <a
+          className={styles.menuItem}
+          href={HELP_FEEDBACK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMenuOpen(false)}
+        >
+          <CircleHelp size={16} strokeWidth={1.8} />
+          <span>{t("account.helpFeedback")}</span>
+        </a>
+      )}
 
-      <a
-        className={styles.menuItem}
-        href={GITHUB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => setMenuOpen(false)}
-      >
-        <Github size={16} strokeWidth={1.8} />
-        <span>{t("account.projectUrl")}</span>
-      </a>
+      {!HIDDEN_ACCOUNT_MENU.has("projectUrl") && (
+        <a
+          className={styles.menuItem}
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMenuOpen(false)}
+        >
+          <Github size={16} strokeWidth={1.8} />
+          <span>{t("account.projectUrl")}</span>
+        </a>
+      )}
 
       {onCustomizeNav ? (
         <button
@@ -412,7 +417,7 @@ export default function AvatarDropdown({
         <span>{t("account.changePassword")}</span>
       </button>
 
-      {userCan(user, "update") && (
+      {!HIDDEN_ACCOUNT_MENU.has("checkUpdates") && userCan(user, "update") && (
         <button
           type="button"
           className={styles.menuItem}
