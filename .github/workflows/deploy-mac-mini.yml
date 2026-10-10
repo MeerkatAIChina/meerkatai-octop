@@ -1,0 +1,79 @@
+name: Deploy Mac Mini
+
+# 自托管 Runner（安装在内网 Mac Mini 上）就地把当前分支构建成镜像并在本机 Docker 重启服务。
+# 因为 Runner 即目标机，所以无需镜像仓库推送、也无需内网穿透；Runner 主动外连 GitHub 领取任务。
+#
+# 触发：push 到 meerkat（生产发布分支）+ 手动 workflow_dispatch。
+# 安装 / 配置 / 回滚说明见 docs/meerkat/ops/cicd-mac-mini.md。
+#
+# 依赖 Runner 具备自定义标签：meerkat-macmini（config.sh --labels 时传入）。
+
+on:
+  push:
+    branches:
+      - meerkat
+  workflow_dispatch:
+
+# 同一台机器串行部署，避免两次 build 互相覆盖镜像 / 争抢端口。
+concurrency:
+  group: deploy-mac-mini
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build & deploy on Mac Mini
+    # 自定义标签保证只在目标 Mac Mini 上运行；self-hosted 为 GitHub 默认标签。
+    runs-on: [self-hosted, meerkat-macmini]
+    # 仅本仓库执行：fork 上无此 Runner，否则任务会永久排队。
+    if: github.repository == 'MeerkatAIChina/meerkatai-octop'
+    timeout-minutes: 60
+    env:
+      # 端口在此统一解析，compose 插值与健康检查共用；可用仓库变量 OCTOP_PORT 覆盖。
+      OCTOP_PORT: ${{ vars.OCTOP_PORT || '8088' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Docker
+        run: |
+          export PATH="$HOME/.docker/bin:$PATH"
+          docker version
+          docker compose version
+
+      - name: Build & restart Octop
+        # 通过环境变量为 compose 插值；未设置时沿用 docker-compose.yml 中的默认值。
+        # 需要在 Mac Mini 上生效的密钥请在仓库 Secrets 中新增同名条目，并在此处透传。
+        env:
+          OCTOP_DEFAULT_PASSWORD: ${{ secrets.OCTOP_DEFAULT_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+        run: |
+          set -euo pipefail
+          # Runner 作为 LaunchAgent 启动时 PATH 很干净；Docker Desktop 的 CLI 在 ~/.docker/bin。
+          export PATH="$HOME/.docker/bin:$PATH"
+          # 用绝对路径固定数据目录（等价于 compose 默认的 ~/.octop），避免 ~ 展开歧义，
+          # 同时保证多次部署之间数据卷不变、不会丢数据。
+          export OCTOP_DATA="${OCTOP_DATA:-$HOME/.octop}"
+          echo "data dir: $OCTOP_DATA"
+          docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+          # 为本次提交留一个 SHA 标签，便于快速回滚（见 runbook）。
+          docker tag octop:latest "octop:sha-${GITHUB_SHA:0:12}"
+
+      - name: Wait for health
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.docker/bin:$PATH"
+          port="${OCTOP_PORT:-8088}"
+          for i in $(seq 1 36); do
+            if curl -fsS "http://localhost:${port}/api/health" >/dev/null 2>&1; then
+              echo "healthy after ${i} attempt(s)"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::health check failed after 180s"
+          docker compose -f docker/docker-compose.yml logs --tail=200
+          exit 1
