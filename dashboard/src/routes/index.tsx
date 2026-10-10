@@ -156,10 +156,12 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/skill-packages", element: <SkillPackagesPage /> },
   { path: "/knowledge-bases", element: <KnowledgeBasesPage /> },
   { path: "/bridge", element: <BridgePage /> },
-  {
-    path: "/personalization/acp",
-    element: <RedirectPreserveSearch to="/acp" />,
-  },
+  // Hidden with the ACP page — restore alongside HIDDEN_NAV_KEYS in
+  // config/hiddenFeatures.ts.
+  // {
+  //   path: "/personalization/acp",
+  //   element: <RedirectPreserveSearch to="/acp" />,
+  // },
   { path: "/personalization/*", element: <PersonalizationPage /> },
   {
     path: "/skills",
@@ -177,27 +179,31 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/workbench", element: null },
   { path: "/workbench/terminal", element: null },
   { path: "/workbench/browser", element: null },
-  {
-    path: "/terminal",
-    element: <RedirectPreserveSearch to="/workbench/terminal" />,
-  },
-  {
-    path: "/remote-browser",
-    element: <RedirectPreserveSearch to="/workbench/browser" />,
-  },
+  // Hidden with the workbench page — restore alongside HIDDEN_NAV_KEYS in
+  // config/hiddenFeatures.ts.
+  // {
+  //   path: "/terminal",
+  //   element: <RedirectPreserveSearch to="/workbench/terminal" />,
+  // },
+  // {
+  //   path: "/remote-browser",
+  //   element: <RedirectPreserveSearch to="/workbench/browser" />,
+  // },
   { path: "/remote-desktop", element: <RemoteDesktopPage /> },
   { path: "/remote-desktop/desktop", element: <RemoteDesktopPage /> },
   { path: "/remote-desktop/phone", element: <RemoteDesktopPage /> },
   { path: "/remote-desktop/phone/screen", element: <RemoteDesktopPage /> },
   { path: "/remote-desktop/phone/shell", element: <RemoteDesktopPage /> },
-  {
-    path: "/remote-phone",
-    element: <RedirectPreserveSearch to="/remote-desktop/phone" />,
-  },
-  {
-    path: "/remote-android",
-    element: <Navigate to="/remote-desktop/phone" replace />,
-  },
+  // Hidden with the remote desktop page — restore alongside HIDDEN_NAV_KEYS
+  // in config/hiddenFeatures.ts.
+  // {
+  //   path: "/remote-phone",
+  //   element: <RedirectPreserveSearch to="/remote-desktop/phone" />,
+  // },
+  // {
+  //   path: "/remote-android",
+  //   element: <Navigate to="/remote-desktop/phone" replace />,
+  // },
   {
     path: "/subagents",
     element: <RedirectPreserveSearch to="/personalization/subagents" />,
@@ -217,10 +223,12 @@ export const routeConfigs: RouteConfig[] = [
 
   // Admin (RequirePermission wrapper applied in MainLayout)
   { path: "/admin/users", element: <OctopAdminUsersPage /> },
-  {
-    path: "/admin/sso",
-    element: <Navigate to="/admin/users?tab=oidc" replace />,
-  },
+  // Hidden with the OIDC tab — restore alongside HIDDEN_TAB_KEYS in
+  // config/hiddenFeatures.ts.
+  // {
+  //   path: "/admin/sso",
+  //   element: <Navigate to="/admin/users?tab=oidc" replace />,
+  // },
   {
     path: "/admin/shared-models",
     element: <Navigate to="/admin/models" replace />,
@@ -239,10 +247,12 @@ export const routeConfigs: RouteConfig[] = [
     path: "/admin/voice",
     element: <Navigate to="/admin/models?tab=voice" replace />,
   },
-  {
-    path: "/admin/updates",
-    element: <Navigate to="/admin/advanced?tab=updates" replace />,
-  },
+  // Hidden with the updates tab — restore alongside HIDDEN_TAB_KEYS in
+  // config/hiddenFeatures.ts.
+  // {
+  //   path: "/admin/updates",
+  //   element: <Navigate to="/admin/advanced?tab=updates" replace />,
+  // },
 
   // Legacy redirects — keeps old bookmarks working
   { path: "/admin/storage", element: <Navigate to="/admin/backend" replace /> },
@@ -272,10 +282,12 @@ export const routeConfigs: RouteConfig[] = [
   },
   { path: "/environments", element: <Navigate to="/admin/advanced" replace /> },
   { path: "/agent-config", element: <AgentConfigPage /> },
-  {
-    path: "/updates",
-    element: <Navigate to="/admin/advanced?tab=updates" replace />,
-  },
+  // Hidden with the updates tab — restore alongside HIDDEN_TAB_KEYS in
+  // config/hiddenFeatures.ts.
+  // {
+  //   path: "/updates",
+  //   element: <Navigate to="/admin/advanced?tab=updates" replace />,
+  // },
   {
     path: "/plugins",
     element: <Navigate to="/admin/plugins" replace />,

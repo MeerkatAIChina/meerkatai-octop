@@ -5,7 +5,9 @@ import {
   NAV_PERMISSIONS,
   pathPermissionKeys,
   PERM,
+  routeNeedsPermission,
 } from "../utils/permissions";
+import { HIDDEN_NAV_KEYS } from "../config/hiddenFeatures";
 import { isWorkbenchPath, resolveSelectedKey, routeConfigs } from "./index";
 
 describe("pathPermissionKeys", () => {
@@ -82,21 +84,18 @@ describe("pathPermissionKeys", () => {
     expect([...PERM.advancedPage]).not.toContain("knowledge_settings");
   });
 
+  // The remote-desktop / acp paths that used to be the fixtures here are
+  // hidden now, so canAccessPath short-circuits them before permissions are
+  // consulted. These use visible paths with the same shapes: a single-key
+  // gate, a two-key any-of gate, and the admin sentinel.
   it("canAccessPath respects holder permissions", () => {
-    const user = { role: "user", permissions: ["desktop"] };
-    expect(canAccessPath(user, "/remote-desktop")).toBe(true);
-    expect(canAccessPath(user, "/remote-desktop/desktop")).toBe(true);
-    expect(canAccessPath(user, "/remote-desktop/phone")).toBe(false);
-    expect(
-      canAccessPath(
-        { role: "user", permissions: ["mobile"] },
-        "/remote-desktop/phone",
-      ),
-    ).toBe(true);
+    const user = { role: "user", permissions: ["connectors"] };
+    expect(canAccessPath(user, "/connectors")).toBe(true);
+    expect(canAccessPath(user, "/knowledge-bases")).toBe(false);
     expect(canAccessPath(user, "/admin/users")).toBe(false);
-    expect(canAccessPath({ role: "admin", permissions: [] }, "/acp")).toBe(
-      true,
-    );
+    expect(
+      canAccessPath({ role: "admin", permissions: [] }, "/admin/advanced"),
+    ).toBe(true);
     expect(
       canAccessPath(
         { role: "user", permissions: ["knowledge_bases"] },
@@ -125,5 +124,74 @@ describe("unknown dashboard paths", () => {
 
   it("are caught by the not-found route", () => {
     expect(routeConfigs.some((rc) => rc.path === "*")).toBe(true);
+  });
+});
+
+describe("hidden features", () => {
+  const admin = { role: "admin", permissions: [] };
+  // Enough module keys to clear every gate the hidden trees carry, so a
+  // failure here can only come from the hidden-feature check.
+  const privileged = {
+    role: "user",
+    permissions: ["desktop", "mobile", "browser", "terminal"],
+  };
+
+  it("keeps hidden route trees unreachable for everyone", () => {
+    const paths = [
+      "/bridge",
+      "/bridge/anything",
+      "/workbench",
+      "/workbench/terminal",
+      "/workbench/browser",
+      "/remote-desktop",
+      "/remote-desktop/desktop",
+      "/remote-desktop/phone",
+      "/remote-desktop/phone/shell",
+      "/acp",
+    ];
+    for (const path of paths) {
+      expect(canAccessPath(admin, path)).toBe(false);
+      expect(canAccessPath(privileged, path)).toBe(false);
+    }
+    for (const key of HIDDEN_NAV_KEYS) {
+      expect(canAccessPath(admin, `/${key}`)).toBe(false);
+    }
+  });
+
+  // /bridge carries no permission gate of its own (pathPermissionKeys returns
+  // null for it), so MainLayout never wraps it in RequirePermission. Without
+  // this the guard above would never run and the page would stay reachable.
+  it("wraps every hidden route so the check actually runs", () => {
+    for (const key of HIDDEN_NAV_KEYS) {
+      expect(routeNeedsPermission(`/${key}`)).toBe(true);
+    }
+    expect(routeNeedsPermission("/bridge")).toBe(true);
+    expect(routeNeedsPermission("/remote-desktop/phone")).toBe(true);
+  });
+
+  // Legacy paths that used to redirect into a hidden page now fall through to
+  // the "*" route. Re-adding one without un-hiding its target would strand
+  // users on a Forbidden page.
+  it("no longer routes the hidden aliases", () => {
+    const paths = routeConfigs.map((rc) => rc.path);
+    for (const path of [
+      "/personalization/acp",
+      "/terminal",
+      "/remote-browser",
+      "/remote-phone",
+      "/remote-android",
+      "/admin/sso",
+      "/admin/updates",
+      "/updates",
+    ]) {
+      expect(paths).not.toContain(path);
+    }
+  });
+
+  it("leaves visible paths reachable", () => {
+    expect(canAccessPath(admin, "/chat")).toBe(true);
+    expect(canAccessPath(admin, "/experts")).toBe(true);
+    expect(canAccessPath(admin, "/knowledge-bases")).toBe(true);
+    expect(canAccessPath(admin, "/admin/users")).toBe(true);
   });
 });

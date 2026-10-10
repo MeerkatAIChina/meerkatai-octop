@@ -74,9 +74,11 @@ export default function AdvancedSettingsPage() {
   if (moved === "voice" || moved === "search") {
     return <Navigate to={`/admin/models?tab=${moved}`} replace />;
   }
-  if (moved === "bridge") {
-    return <Navigate to="/bridge" replace />;
-  }
+  // Hidden with the bridge page — restore alongside HIDDEN_NAV_KEYS in
+  // config/hiddenFeatures.ts.
+  // if (moved === "bridge") {
+  //   return <Navigate to="/bridge" replace />;
+  // }
 
   if (forbidden) return <ForbiddenPage />;
 
