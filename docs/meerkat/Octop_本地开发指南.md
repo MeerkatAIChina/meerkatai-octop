@@ -170,7 +170,7 @@ uv run octop init
 npm run dev
 ```
 
-打开 `http://localhost:5173/setup` 页面机型初始化配置。
+打开 `http://localhost:5173/setup` 页面进行初始化配置。
 
 ```bash
 # 后端
@@ -197,7 +197,7 @@ git config --unset core.hooksPath
    1. `ruff format` + `ruff check --fix` （后端格式化）
    2. `prettier --write` （前端格式化）
    3. `ruff check + mypy src/octop`（后端 lint + 类型检查）
-   4. `pytrst --testmon` （只跑受影响的测试）
+   4. `pytest --testmon` （只跑受影响的测试）
 2. 跑 `npm run build`
    1. 等于 `tsc -b && vite build`（前端类型检查 + 完整构建）
 
