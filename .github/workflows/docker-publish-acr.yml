@@ -2,6 +2,11 @@ name: Publish to Aliyun ACR
 
 # 推送到 meerkat 生产分支时，构建前后端镜像并推送到阿里云 ACR。
 # 服务器用 `docker compose pull` 拉取即可，无需在生产机构建。
+#
+# 【当前停用】GitHub 组织账单锁定期间本工作流不执行任何任务（仅显示 skipped）。
+# 原因：托管 Runner 因账单不可用；生产改用自托管 Runner（见 deploy-runner.yml）。
+# 恢复方式：仓库 Settings → Secrets and variables → Actions → Variables
+#   新建变量 ACR_PUBLISH_ENABLED=true 即启用（或删除下方 job 的 if 行）。
 on:
   push:
     branches: [meerkat]
@@ -14,6 +19,8 @@ concurrency:
 
 jobs:
   build-and-push:
+    # 默认关闭；设置仓库变量 ACR_PUBLISH_ENABLED=true 才允许执行。
+    if: ${{ vars.ACR_PUBLISH_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
