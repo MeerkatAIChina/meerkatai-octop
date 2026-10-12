@@ -27,7 +27,9 @@ jobs:
     runs-on: [self-hosted, meerkat-aliyun]
     # 仅本仓库执行：fork 上没有该 Runner，否则任务会永久排队。
     if: github.repository == 'MeerkatAIChina/meerkatai-octop'
-    timeout-minutes: 60
+    # 首次构建需安装全部 Python 依赖（海量小文件解压较慢），给足时间。
+    # 依赖层只依赖 pyproject/uv.lock，之后的部署会命中 BuildKit 缓存。
+    timeout-minutes: 180
     env:
       OCTOP_PORT: ${{ vars.OCTOP_PORT || '8088' }}
       COMPOSE_FILE: /opt/octop-deploy/docker-compose.yml
